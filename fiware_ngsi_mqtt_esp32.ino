@@ -10,19 +10,30 @@
 //Autor Rev3: Fábio Henrique Cabrini
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include "DHT.h"
+#define DHTPIN 14
+#define DHTTYPE DHT11   // DHT 22  (AM2302), AM2321
 
 // Configurações - variáveis editáveis
-const char* default_SSID = "HORIZON"; // Nome da rede Wi-Fi
-const char* default_PASSWORD = "1234567890"; // Senha da rede Wi-Fi
+const char* default_SSID = "Barros"; // Nome da rede Wi-Fi
+const char* default_PASSWORD = "caio2424"; // Senha da rede Wi-Fi
 const char* default_BROKER_MQTT = "20.206.204.231"; // IP do Broker MQTT
 const int default_BROKER_PORT = 1883; // Porta do Broker MQTT
 const char* default_TOPICO_SUBSCRIBE = "/TEF/lamp05x/cmd"; // Tópico MQTT de escuta
 const char* default_TOPICO_PUBLISH_1 = "/TEF/lamp05x/attrs"; // Tópico MQTT de envio de informações para Broker
 const char* default_TOPICO_PUBLISH_2 = "/TEF/lamp05x/attrs/l"; // Tópico MQTT de envio de informações para Broker
+const char* default_TOPICO_PUBLISH_3 = "/TEF/lamp05x/attrs/h"; // Tópico MQTT de envio de informações para Broker
+const char* default_TOPICO_PUBLISH_4 = "/TEF/lamp05x/attrs/t"; // Tópico MQTT de envio de informações para Broker
 const char* default_ID_MQTT = "fiware_05x"; // ID MQTT
 const int default_D4 = 2; // Pino do LED onboard
 // Declaração da variável para o prefixo do tópico
 const char* topicPrefix = "lamp05x";
+
+float temperature;
+float humidity;
+int luminosity;
+
+
 
 // Variáveis para configurações editáveis
 char* SSID = const_cast<char*>(default_SSID);
@@ -32,8 +43,12 @@ int BROKER_PORT = default_BROKER_PORT;
 char* TOPICO_SUBSCRIBE = const_cast<char*>(default_TOPICO_SUBSCRIBE);
 char* TOPICO_PUBLISH_1 = const_cast<char*>(default_TOPICO_PUBLISH_1);
 char* TOPICO_PUBLISH_2 = const_cast<char*>(default_TOPICO_PUBLISH_2);
+char* TOPICO_PUBLISH_3 = const_cast<char*>(default_TOPICO_PUBLISH_3);
+char* TOPICO_PUBLISH_4 = const_cast<char*>(default_TOPICO_PUBLISH_4);
 char* ID_MQTT = const_cast<char*>(default_ID_MQTT);
 int D4 = default_D4;
+DHT dht(DHTPIN, DHTTYPE);
+
 
 WiFiClient espClient;
 PubSubClient MQTT(espClient);
@@ -62,6 +77,7 @@ void setup() {
     initSerial();
     initWiFi();
     initMQTT();
+    dht.begin();
     delay(5000);
     MQTT.publish(TOPICO_PUBLISH_1, "s|on");
 }
@@ -70,6 +86,9 @@ void loop() {
     VerificaConexoesWiFIEMQTT();
     EnviaEstadoOutputMQTT();
     handleLuminosity();
+    handleTemperature();
+    handleHumidity();
+    checkConditions();
     MQTT.loop();
 }
 
@@ -163,12 +182,61 @@ void reconnectMQTT() {
     }
 }
 
+void checkConditions() {
+    bool outOfRange = false;
+
+    // Verificar faixa de temperatura
+    if (temperature > 15 && temperature < 25) {
+        outOfRange = true;
+    }
+
+    // Verificar faixa de luminosidade
+    if (luminosity > 0 && luminosity < 30) {
+        outOfRange = true;
+    }
+
+    // Verificar faixa de umidade
+    if (humidity > 30 && humidity < 50) {
+        outOfRange = true;
+    }
+
+    // Acender ou apagar o LED com base nas condições
+    if (outOfRange) {
+        digitalWrite(D4, HIGH);
+        EstadoSaida = '1';
+    } else {
+        digitalWrite(D4, LOW);
+        EstadoSaida = '0';
+    }
+}
+
+
 void handleLuminosity() {
     const int potPin = 34;
     int sensorValue = analogRead(potPin);
-    int luminosity = map(sensorValue, 0, 4095, 0, 100);
+    int luminosity = map(sensorValue, 90, 4100, 0, 100);
+    //Serial.print("Valor lido: ");
+    //Serial.println(sensorValue);
     String mensagem = String(luminosity);
     Serial.print("Valor da luminosidade: ");
     Serial.println(mensagem.c_str());
     MQTT.publish(TOPICO_PUBLISH_2, mensagem.c_str());
+}
+
+void handleTemperature(){
+  float temperature = dht.readTemperature();
+  String temperature_string = String(temperature);
+  Serial.print("Valor Temp:");
+  Serial.print(temperature);
+  MQTT.publish(TOPICO_PUBLISH_4, temperature_string.c_str());
+
+}
+
+void handleHumidity(){
+  float humidity = dht.readHumidity();
+  String humidity_string = String(humidity);
+  Serial.print("Valor Humi:");
+  Serial.print(humidity);
+  MQTT.publish(TOPICO_PUBLISH_3, humidity_string.c_str());
+
 }
