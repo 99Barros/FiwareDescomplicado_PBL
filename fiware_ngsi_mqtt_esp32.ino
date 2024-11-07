@@ -186,17 +186,17 @@ void checkConditions() {
     bool outOfRange = false;
 
     // Verificar faixa de temperatura
-    if (temperature > 15 && temperature < 25) {
+    if (temperature > 15 || temperature < 25) {
         outOfRange = true;
     }
 
     // Verificar faixa de luminosidade
-    if (luminosity > 0 && luminosity < 30) {
+    if (luminosity > 0 || luminosity < 30) {
         outOfRange = true;
     }
 
     // Verificar faixa de umidade
-    if (humidity > 30 && humidity < 50) {
+    if (humidity > 30 || humidity < 50) {
         outOfRange = true;
     }
 
