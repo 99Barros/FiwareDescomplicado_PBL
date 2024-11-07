@@ -44,7 +44,7 @@ Este sistema de monitoramento IoT é composto pelos seguintes componentes:
 
 * Dashboard em Python: Interface gráfica para visualização e acompanhamento dos dados coletados em tempo real. 
 
-# LISTA DE MATERIAIS 
+# Lista de materiais 
 
 Quantidade -	Item -	Descrição 
 
