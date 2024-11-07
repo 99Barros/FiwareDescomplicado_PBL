@@ -72,9 +72,9 @@ app.layout = html.Div([
 def update_data_store(n, stored_data):
         # Get Sensor Data
     lastN = 20  #max register to show
-    data_luminosity = get_sensor_data('luminosity', lastN)
-    data_humidity = get_sensor_data('humidity', lastN)
-    data_temperature = get_sensor_data('temperature', lastN)
+    data_luminosity = get_data('luminosity', lastN)
+    data_humidity = get_data('humidity', lastN)
+    data_temperature = get_data('temperature', lastN)
  
     if data_temperature and data_humidity and data_luminosity:
         temperature_values = [float(entry['attrValue']) for entry in data_temperature]
