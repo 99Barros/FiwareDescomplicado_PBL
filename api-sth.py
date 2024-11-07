@@ -93,8 +93,7 @@ def update_data_store(n, stored_data):
         return stored_data
  
     return stored_data
- 
-@def create_graph(trace_values, trace_name, color, y_title, y_min=None, y_max=None):
+def create_graph(trace_values, trace_name, color, y_title, y_min=None, y_max=None):
     fig = go.Figure(data=[go.Scatter(
         x=trace_values['timestamps'],
         y=trace_values[trace_name],
